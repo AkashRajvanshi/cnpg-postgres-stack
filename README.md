@@ -16,7 +16,7 @@
 
 * **[CloudNativePG](https://cloudnative-pg.io/):** 3-node PostgreSQL 16.3 cluster with pgbouncer pooling
 * **[OpenBao](https://openbao.org/):** Vault-compatible secrets with External Secrets Operator
-* **[RustFS](https://github.com/rustfs/rustfs):** S3-compatible backup storage with Barman Cloud
+* **[RustFS](https://github.com/rustfs/rustfs):** S3-compatible storage
 * **[Pigsty](https://github.com/Vonng/pigsty):** PostgreSQL monitoring with VictoriaMetrics integration
 
 ---
