@@ -1,0 +1,11 @@
+apiVersion: v2
+appVersion: 1.0.0
+description: A Helm chart for openbao
+name: openbao
+version: 1.0.0
+dependencies:
+- alias: openbao
+  condition: openbao.enabled
+  name: openbao
+  repository: https://openbao.github.io/openbao-helm
+  version: 0.17.1

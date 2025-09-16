@@ -1,0 +1,55 @@
+# Kubernetes
+*.kubeconfig
+kubeconfig*
+*-kubeconfig
+
+# Secrets and credentials
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+.env
+.env.*
+
+# Helm
+charts/*/charts/
+charts/*/requirements.lock
+.helm/
+
+# Backup files
+*.backup
+*.bak
+*.tmp
+*~
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Local testing
+test-output/
+*.test

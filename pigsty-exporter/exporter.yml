@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pg-exporter
+  namespace: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pg-exporter
+  template:
+    metadata:
+      labels:
+        app: pg-exporter
+    spec:
+      containers:
+        - name: exporter
+          image: pgsty/pg_exporter:1.0.2-amd64
+          #! args:
+          #!   - "--auto-discovery=false"
+          ports:
+            - containerPort: 9630
+              name: metrics
+          env:
+            - name: PG_EXPORTER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: pg-exporter-creds
+                  key: PG_EXPORTER_URL
+            - name: PG_EXPORTER_CONFIG
+              value: "/config/pg_exporter.yml"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: pg-exporter-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pg-exporter
+  labels:
+    app: pg-exporter
+spec:
+  selector:
+    app: pg-exporter
+  ports:
+    - name: metrics
+      protocol: TCP
+      port: 9630
+      targetPort: 9630
+  type: ClusterIP

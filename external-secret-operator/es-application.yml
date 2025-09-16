@@ -1,0 +1,24 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: psql-app-user-secret
+  namespace: postgres
+spec:
+  refreshInterval: "24h"
+  target:
+    name: cluster-app-user
+    creationPolicy: Owner
+    template:
+      data:
+        username: "app"
+        password: "{{ .password }}"
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: Password
+          name: pg-password-generator
+      rewrite:
+        - regexp:
+            source: "(.*)"
+            target: "password"

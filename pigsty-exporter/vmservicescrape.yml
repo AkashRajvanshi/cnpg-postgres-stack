@@ -1,0 +1,22 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: pg-exporter-scrape
+  namespace: postgres
+spec:
+  selector:
+    matchLabels:
+      app: pg-exporter
+  namespaceSelector:
+    matchNames:
+      - postgres
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      relabelConfigs:
+        - source_labels: [__meta_kubernetes_namespace]
+          regex: "postgres"
+          target_label: tenant_id
+          replacement: "10"
+          action: replace

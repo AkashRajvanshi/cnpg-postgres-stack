@@ -1,0 +1,25 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: es-backup-creds
+  namespace: postgres
+spec:
+  secretStoreRef:
+    name: vault-backend
+    kind: SecretStore
+  target:
+    name: backup-creds
+    creationPolicy: Owner
+    template:
+      data:
+        accessKey: "{{ .accessKey }}"
+        secretKey: "{{ .secretKey }}"
+  data:
+    - secretKey: accessKey
+      remoteRef:
+        key: secrets/s3Credentials
+        property: accessKey
+    - secretKey: secretKey
+      remoteRef:
+        key: secrets/s3Credentials
+        property: accessKey

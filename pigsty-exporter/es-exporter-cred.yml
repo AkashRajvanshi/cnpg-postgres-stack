@@ -1,0 +1,43 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: pg-exporter-creds
+  namespace: postgres
+spec:
+  secretStoreRef:
+    name: vault-backend
+    kind: SecretStore
+  target:
+    name: pg-exporter-creds
+    creationPolicy: Owner
+    template:
+      data:
+        PG_EXPORTER_URL: "postgres://{{ .username }}:{{ .password }}@psql-cluster-restore-rw.postgres.svc:5432/postgres"
+  data:
+    - secretKey: username
+      remoteRef:
+        key: secrets/postgres-credentials
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: secrets/postgres-credentials
+        property: password
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: push-pg-exporter-creds
+  namespace: postgres
+spec:
+  deletionPolicy: Delete
+  refreshInterval: 1h
+  secretStoreRefs:
+    - name: vault-backend
+      kind: SecretStore
+  selector:
+    secret:
+      name: pg-exporter-creds
+  data:
+    - match:
+        remoteRef:
+          remoteKey: secrets/pg-exporter-url

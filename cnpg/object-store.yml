@@ -1,0 +1,23 @@
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: rustfs-s3-ap
+  namespace: postgres
+spec:
+  retentionPolicy: "30d"
+  configuration:
+    destinationPath: s3://ar-cnpg-backup/hl-cnpg-cluster/
+    endpointURL: http://rustfs-service.rustfs.svc:7000
+    s3Credentials:
+      accessKeyId:
+        name: backup-creds
+        key: accessKey
+      secretAccessKey:
+        name: backup-creds
+        key: secretKey
+    wal:
+      encryption:
+      compression: gzip
+    data:
+      encryption:
+      compression: gzip

@@ -1,0 +1,122 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rustfs
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: bao-rustfs-creds
+  namespace: rustfs
+spec:
+  provider: vault
+  parameters:
+    roleName: "rustfs-role"
+    vaultAddress: "http://openbao.openbao.svc.cluster.local:8200"
+    objects: |
+      - objectName: "rustfsAccessKey"
+        secretPath: "secrets/data/rustfs-credentials"
+        secretKey: "access_key"
+      - objectName: "rustfsSecretKey"
+        secretPath: "secrets/data/rustfs-credentials"
+        secretKey: "secret_key"
+  secretObjects:
+  - secretName: rustfs-csi-secret
+    type: Opaque
+    data:
+    - key: RUSTFS_ACCESS_KEY
+      objectName: "rustfsAccessKey"
+    - key: RUSTFS_SECRET_KEY
+      objectName: "rustfsSecretKey"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rustfs-config
+  namespace: rustfs
+data:
+  RUSTFS_VOLUMES: "/data"
+  RUSTFS_ADDRESS: "0.0.0.0:7000"
+  RUSTFS_CONSOLE_ENABLE: "true"
+  RUSTFS_CONSOLE_ADDRESS: "0.0.0.0:7001"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rustfs-data-pvc
+  namespace: rustfs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: openebs-lvm
+  resources:
+    requests:
+      storage: 40Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rustfs
+  namespace: rustfs
+  labels:
+    app: rustfs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rustfs
+  template:
+    metadata:
+      labels:
+        app: rustfs
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: rustfs
+          image: rustfs/rustfs:1.0.0-alpha.39
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: api
+              containerPort: 7000
+            - name: console
+              containerPort: 7001
+          envFrom:
+            - configMapRef:
+                name: rustfs-config
+            - secretRef:
+                name: rustfs-csi-secret
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: rustfs-data-pvc
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "bao-rustfs-creds"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs-service
+  namespace: rustfs
+spec:
+  selector:
+    app: rustfs
+  ports:
+    - name: api
+      protocol: TCP
+      port: 7000
+      targetPort: 7000
+    - name: console
+      protocol: TCP
+      port: 7001
+      targetPort: 7001

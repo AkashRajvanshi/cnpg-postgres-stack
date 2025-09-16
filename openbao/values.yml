@@ -1,0 +1,85 @@
+openbao:
+  enabled: true
+  global:
+    tlsDisable: true
+  injector:
+    enabled: "true"
+    replicas: 1
+    port: 8080
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+      limits:
+        memory: 256Mi
+        cpu: 250m
+  server:
+    enabled: true
+    image:
+      repository: "openbao/openbao-nightly"
+      tag: "2.4.0-nightly1756043023"
+    logLevel: "debug"
+    logFormat: "standard"
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+      limits:
+        memory: 256Mi
+        cpu: 250m
+    volumes:
+      - name: unseal-key
+        secret:
+          secretName: unseal-key
+    volumeMounts:
+      - mountPath: /keys
+        name: unseal-key
+        readOnly: true
+    dataStorage:
+      enabled: true
+      size: 2Gi
+      mountPath: "/openbao/data"
+      storageClass: openebs-lvm
+      accessMode: ReadWriteOnce
+    auditStorage:
+      enabled: true
+      size: 1Gi
+      mountPath: "/openbao/audit"
+      storageClass: openebs-lvm
+      accessMode: ReadWriteOnce
+    standalone:
+      enabled: "false"
+    ha:
+      enabled: true
+      replicas: 3
+      raft:
+        enabled: true
+        config: |
+          ui = true
+          listener "tcp" {
+            tls_disable = 1
+            address = "[::]:8200"
+            cluster_address = "[::]:8201"
+          }
+          storage "raft" {
+            path = "/openbao/data"
+          }
+          seal "static" {
+            current_key_id = "umbrella-1"
+            current_key = "file:///keys/unseal-umbrella-1.key"
+          }
+          service_registration "kubernetes" {}
+
+  ui:
+    enabled: true
+    serviceType: LoadBalancer
+
+  csi:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 50m
+        memory: 128Mi
